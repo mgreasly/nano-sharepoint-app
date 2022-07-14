@@ -14,10 +14,10 @@ const msalConfig = {
     }
 };
 const loginRequest = {
-    scopes: [
-        "https://t353r.sharepoint.com/.default"
-    ]
+    scopes: ["https://t353r.sharepoint.com/.default"]
 };
+const siteUrl = "https://t353r.sharepoint.com/sites/t353r";
+const folderPath = "Shared Documents/General";
 
 const myMSALObj = new PublicClientApplication(msalConfig);
 if (!myMSALObj.getActiveAccount() && myMSALObj.getAllAccounts().length > 0) myMSALObj.setActiveAccount(myMSALObj.getAllAccounts()[0]);
@@ -28,7 +28,7 @@ myMSALObj.addEventCallback((event) => {
 
 export default () => {
     const [account, setAccount] = useState(null);
-    const [profile, setProfile] = useState(null);
+    const [value, setValue] = useState(null);
     useEffect(() => {
         setAccount(myMSALObj.getActiveAccount());
     }, []);
@@ -55,9 +55,9 @@ export default () => {
                 const headers = new Headers();
                 headers.append('Authorization', `Bearer ${response.accessToken}`);
                 headers.append('Accept', 'application/json;odata=verbose');
-                fetch("https://t353r.sharepoint.com/sites/t353r/_api/web/", { method: 'GET', headers: headers })
+                fetch(`${siteUrl}/_api/web/GetFolderByServerRelativeUrl('${folderPath}')/Files`, { method: 'GET', headers: headers })
                     .then(response => response.json())
-                    .then(response => setProfile(response))
+                    .then(response => setValue(response))
                     .catch(error => console.log(error))
             })
             .catch(error => console.log(error));
@@ -69,11 +69,15 @@ export default () => {
             {account && <button onClick={signOut}>Sign Out</button>}
             <button onClick={getInfo}>Get Web Info</button>
             <hr />
-            {profile && <pre>{JSON.stringify(profile, null, 2)}</pre>}
+            {value && value.d.results.map((item, id) => <p key={id}>{item.ServerRelativeUrl}</p>)}
+            <hr />
+            {account && <pre>{JSON.stringify(account, null, 2)}</pre>}
+            <hr />
+            {value && <pre>{JSON.stringify(value, null, 2)}</pre>}
             <hr />
         </MsalProvider>
     );
-} 
+}
 
 // <hr />
 // {account && <pre>{JSON.stringify(account, null, 2)}</pre>}
